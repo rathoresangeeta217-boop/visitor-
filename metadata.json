@@ -1,0 +1,6 @@
+{
+  "name": "Gate Entry Kiosk",
+  "description": "Tablet application for gate reception to handle customer and vendor visits with live image capture and voice input.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
