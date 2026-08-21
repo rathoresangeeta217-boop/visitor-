@@ -1,8 +1,9 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle, UserCircle } from 'lucide-react';
+import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle, UserCircle, LogOut } from 'lucide-react';
 import { CameraCapture } from './components/CameraCapture';
 import { VoiceInput } from './components/VoiceInput';
 import { SelectInput } from './components/SelectInput';
+import { AdminLogin } from './components/AdminLogin';
 import { FormData, Entry } from './types';
 import { db } from './lib/firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from 'firebase/firestore';
@@ -10,14 +11,15 @@ import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from '
 // Lazy load admin panel for performance optimization
 const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
-type ViewState = 'home' | 'customer' | 'vendor' | 'success' | 'admin';
+type ViewState = 'home' | 'customer' | 'vendor' | 'success' | 'admin_login' | 'admin';
 
 const MEET_OPTIONS = [
   'Deepak Khandelwal',
   'Bhawna Khandelwal',
   'Khushboo Modi (Sales Manager)',
   'Nidhi Sharma (General & purchase Manger)',
-  'Anshuman Singh'
+  'Anshuman Singh',
+  'Abhilasha'
 ];
 
 const INITIAL_FORM_DATA: FormData = {
@@ -30,11 +32,22 @@ const INITIAL_FORM_DATA: FormData = {
   whomToMeet: '',
 };
 
+const isAuthorized = (user: string | null, whomToMeet: string) => {
+  if (!user) return false;
+  if (user === 'Bhawna Khandelwal' || user === 'Anshuman') return true;
+  
+  const userLower = user.toLowerCase();
+  const whomLower = (whomToMeet || '').toLowerCase();
+  
+  return whomLower.includes(userLower);
+};
+
 export default function App() {
   const [view, setView] = useState<ViewState>('home');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [activeNotification, setActiveNotification] = useState<Entry | null>(null);
+  const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
 
   // Firestore real-time sync
   useEffect(() => {
@@ -45,12 +58,27 @@ export default function App() {
         fetchedEntries.push({ id: doc.id, ...doc.data() } as Entry);
       });
       
-      // Look for new pending entries to show notification (if we are admin or on home)
-      // This is a simple implementation: show notification for the newest pending entry
+      // Look for new pending entries to show notification
       const newestPending = fetchedEntries.find(e => e.status === 'pending');
-      if (newestPending) {
+      if (newestPending && isAuthorized(loggedInUser, newestPending.whomToMeet)) {
         // Compare with current activeNotification to prevent re-triggering for the same entry constantly
-        setActiveNotification(prev => prev?.id === newestPending.id ? prev : newestPending);
+        setActiveNotification(prev => {
+          if (prev?.id !== newestPending.id) {
+            // Send system notification if supported and permitted
+            if ('Notification' in window && Notification.permission === 'granted') {
+              const notif = new Notification(`New ${newestPending.type} Entry`, {
+                body: `${newestPending.name} (${newestPending.mobile}) is waiting for approval to meet ${newestPending.whomToMeet}.`,
+                icon: newestPending.photo || undefined,
+              });
+              notif.onclick = () => {
+                window.focus();
+                notif.close();
+              };
+            }
+            return newestPending;
+          }
+          return prev;
+        });
       } else {
         setActiveNotification(null);
       }
@@ -59,7 +87,7 @@ export default function App() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [loggedInUser]);
 
   // Auto-approve after 60 seconds
   useEffect(() => {
@@ -97,14 +125,6 @@ export default function App() {
     try {
       await addDoc(collection(db, 'entries'), newEntry);
       
-      // Send system notification if supported and permitted
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(`New ${newEntry.type} Entry`, {
-          body: `${newEntry.name} (${newEntry.mobile}) is waiting for approval.`,
-          icon: newEntry.photo || undefined,
-        });
-      }
-      
       setView('success');
       
       // Auto return to home after 3 seconds
@@ -139,22 +159,38 @@ export default function App() {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+    setView('admin_login');
+  };
+
+  const handleLoginSuccess = (user: string) => {
+    setLoggedInUser(user);
     setView('admin');
   };
 
-  if (view === 'admin') {
-    return (
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 font-medium text-slate-500">Loading Admin Dashboard...</div>}>
-        <AdminPanel entries={entries} onBack={() => setView('home')} onApprove={handleApprove} onReject={handleReject} />
-      </Suspense>
-    );
-  }
-
   return (
     <div className="relative min-h-screen bg-slate-50">
+      {view === 'admin_login' && (
+        <AdminLogin onLoginSuccess={handleLoginSuccess} onBack={() => setView('home')} />
+      )}
+
+      {view === 'admin' && (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 font-medium text-slate-500">Loading Admin Dashboard...</div>}>
+          <AdminPanel 
+            entries={entries} 
+            loggedInUser={loggedInUser}
+            onBack={() => {
+              setLoggedInUser(null);
+              setView('home');
+            }} 
+            onApprove={handleApprove} 
+            onReject={handleReject} 
+          />
+        </Suspense>
+      )}
+
       {/* Global Notification Overlay */}
-      {activeNotification && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+      {view === 'admin' && activeNotification && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-[400px] flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">

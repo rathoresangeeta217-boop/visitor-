@@ -1,34 +1,70 @@
 import React, { useState, useMemo } from 'react';
 import { Entry } from '../types';
-import { ArrowLeft, CheckCircle, XCircle, Clock, FileText, Download } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Clock, FileText, Download, X, User } from 'lucide-react';
 
 interface AdminPanelProps {
   entries: Entry[];
+  loggedInUser: string | null;
   onBack: () => void;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
 }
 
-export function AdminPanel({ entries, onBack, onApprove, onReject }: AdminPanelProps) {
+const isAuthorized = (user: string | null, whomToMeet: string) => {
+  if (!user) return false;
+  if (user === 'Bhawna Khandelwal' || user === 'Anshuman') return true;
+  
+  const userLower = user.toLowerCase();
+  const whomLower = (whomToMeet || '').toLowerCase();
+  
+  return whomLower.includes(userLower);
+};
+
+export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject }: AdminPanelProps) {
   const [filter, setFilter] = useState<'all' | 'customer' | 'vendor'>('all');
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+
+  // Filter entries to only those authorized for the current user
+  const authorizedEntries = useMemo(() => {
+    return entries.filter(e => isAuthorized(loggedInUser, e.whomToMeet));
+  }, [entries, loggedInUser]);
 
   const filteredEntries = useMemo(() => {
-    let result = entries;
+    let result = authorizedEntries;
     if (filter !== 'all') {
       result = result.filter((e) => e.type === filter);
     }
     // Sort by newest first
     return result.sort((a, b) => b.timestamp - a.timestamp);
-  }, [entries, filter]);
+  }, [authorizedEntries, filter]);
 
-  // Mock stats
-  const totalEntries = entries.length;
-  const approvedEntries = entries.filter((e) => e.status === 'approved').length;
-  const pendingEntries = entries.filter((e) => e.status === 'pending').length;
+  // Stats should reflect only authorized entries
+  const totalEntries = authorizedEntries.length;
+  const approvedEntries = authorizedEntries.filter((e) => e.status === 'approved').length;
+  const pendingEntries = authorizedEntries.filter((e) => e.status === 'pending').length;
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+      
+      {/* Fullscreen Image Overlay */}
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 sm:p-8 cursor-pointer animate-in fade-in duration-200"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button className="absolute top-6 right-6 p-2 text-white hover:bg-white/10 rounded-full transition-colors">
+            <X className="w-8 h-8" />
+          </button>
+          <img 
+            src={fullscreenImage} 
+            alt="Fullscreen visitor" 
+            className="max-w-full max-h-full object-contain rounded-xl shadow-2xl" 
+          />
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto space-y-8">
+
         
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -36,10 +72,18 @@ export function AdminPanel({ entries, onBack, onApprove, onReject }: AdminPanelP
             <button
               onClick={onBack}
               className="p-3 bg-white hover:bg-slate-100 text-slate-700 rounded-xl shadow-sm transition-colors border border-slate-200"
+              title="Logout"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+              {loggedInUser && (
+                <p className="text-slate-500 font-medium flex items-center gap-2 mt-1">
+                  <User className="w-4 h-4" /> Welcome, {loggedInUser}
+                </p>
+              )}
+            </div>
           </div>
           
           <div className="flex gap-4">
@@ -122,7 +166,13 @@ export function AdminPanel({ entries, onBack, onApprove, onReject }: AdminPanelP
                   <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4">
                       {entry.photo ? (
-                        <img src={entry.photo} alt={entry.name} className="w-12 h-12 rounded-lg object-cover bg-slate-100" />
+                        <img 
+                          src={entry.photo} 
+                          alt={entry.name} 
+                          className="w-12 h-12 rounded-lg object-cover bg-slate-100 cursor-pointer hover:opacity-80 transition-opacity hover:shadow-md" 
+                          onClick={() => setFullscreenImage(entry.photo)}
+                          title="Click to view full image"
+                        />
                       ) : (
                         <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
                           No Pic
