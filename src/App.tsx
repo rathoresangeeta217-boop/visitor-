@@ -19,7 +19,24 @@ const INITIAL_FORM_DATA: FormData = {
 export default function App() {
   const [view, setView] = useState<ViewState>('home');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [entries, setEntries] = useState<Entry[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('gate_entries');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse entries from localStorage', e);
+      }
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gate_entries', JSON.stringify(entries));
+    }
+  }, [entries]);
+
   const [activeNotification, setActiveNotification] = useState<Entry | null>(null);
 
   // Auto-approve after 60 seconds
