@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle, UserCircle, LogOut } from 'lucide-react';
+import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle, UserCircle, LogOut, Clock, ScanFace, UserCheck, UserX } from 'lucide-react';
+import { motion } from 'motion/react';
 import { CameraCapture } from './components/CameraCapture';
 import { VoiceInput } from './components/VoiceInput';
 import { SelectInput } from './components/SelectInput';
@@ -11,7 +12,7 @@ import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from '
 // Lazy load admin panel for performance optimization
 const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
-type ViewState = 'home' | 'customer' | 'vendor' | 'success' | 'admin_login' | 'admin';
+type ViewState = 'home' | 'customer' | 'vendor' | 'waiting' | 'approved' | 'rejected' | 'admin_login' | 'admin';
 
 const MEET_OPTIONS = [
   'Deepak Khandelwal',
@@ -48,6 +49,7 @@ export default function App() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [activeNotification, setActiveNotification] = useState<Entry | null>(null);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+  const [submittedEntryId, setSubmittedEntryId] = useState<string | null>(null);
 
   // Firestore real-time sync
   useEffect(() => {
@@ -99,6 +101,30 @@ export default function App() {
     }
   }, [activeNotification]);
 
+  // Watch for status changes of the submitted entry
+  useEffect(() => {
+    if (view === 'waiting' && submittedEntryId) {
+      const entry = entries.find(e => e.id === submittedEntryId);
+      if (entry) {
+        if (entry.status === 'approved') {
+          setView('approved');
+          setTimeout(() => {
+            setView('home');
+            setSubmittedEntryId(null);
+            setFormData(INITIAL_FORM_DATA);
+          }, 4000);
+        } else if (entry.status === 'rejected') {
+          setView('rejected');
+          setTimeout(() => {
+            setView('home');
+            setSubmittedEntryId(null);
+            setFormData(INITIAL_FORM_DATA);
+          }, 4000);
+        }
+      }
+    }
+  }, [entries, view, submittedEntryId]);
+
   const handleSelectType = (type: 'customer' | 'vendor') => {
     setFormData(INITIAL_FORM_DATA);
     setView(type);
@@ -123,14 +149,11 @@ export default function App() {
     };
 
     try {
-      await addDoc(collection(db, 'entries'), newEntry);
+      const docRef = await addDoc(collection(db, 'entries'), newEntry);
       
-      setView('success');
+      setSubmittedEntryId(docRef.id);
+      setView('waiting');
       
-      // Auto return to home after 3 seconds
-      setTimeout(() => {
-        setView('home');
-      }, 3000);
     } catch (err) {
       console.error('Error adding document: ', err);
       alert('Failed to submit entry. Please try again.');
@@ -224,15 +247,81 @@ export default function App() {
         </div>
       )}
 
-      {view === 'success' && (
-        <div className="min-h-screen flex items-center justify-center p-6">
-          <div className="bg-white p-12 rounded-3xl shadow-xl flex flex-col items-center max-w-lg w-full text-center">
-            <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
-              <Send className="w-12 h-12" />
+      {view === 'waiting' && (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+          <div className="bg-white p-12 rounded-3xl shadow-xl flex flex-col items-center max-w-lg w-full text-center border border-slate-100">
+            <div className="relative mb-8">
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="absolute inset-0 bg-blue-100 rounded-full blur-xl"
+              />
+              <div className="relative w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
+                <motion.div
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ScanFace className="w-12 h-12" />
+                </motion.div>
+                <motion.div
+                  className="absolute inset-0 border-t-4 border-blue-500 rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                />
+              </div>
             </div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Entry Logged</h2>
+            
+            <h2 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Waiting for Approval</h2>
+            <p className="text-lg text-slate-500 font-medium">
+              Please wait while your host reviews your entry request...
+            </p>
+            
+            <div className="mt-8 flex items-center gap-2 text-sm text-slate-400 font-semibold uppercase tracking-wider">
+              <Clock className="w-4 h-4 animate-pulse" />
+              <span>Usually takes about a minute</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {view === 'approved' && (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+          <div className="bg-white p-12 rounded-3xl shadow-xl flex flex-col items-center max-w-lg w-full text-center border border-slate-100">
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6"
+            >
+              <UserCheck className="w-12 h-12" />
+            </motion.div>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">Entry Approved!</h2>
             <p className="text-lg text-slate-500">
-              Thank you. The entry has been successfully recorded.
+              Welcome inside. You may now proceed.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {view === 'rejected' && (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+          <div className="bg-white p-12 rounded-3xl shadow-xl flex flex-col items-center max-w-lg w-full text-center border border-slate-100">
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6"
+            >
+              <UserX className="w-12 h-12" />
+            </motion.div>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">Entry Declined</h2>
+            <p className="text-lg text-slate-500">
+              Sorry, your host has declined the entry request. Please speak with security.
             </p>
           </div>
         </div>
