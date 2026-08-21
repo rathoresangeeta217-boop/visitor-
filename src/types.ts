@@ -7,6 +7,7 @@ export interface FormData {
   email: string;
   address: string;
   visitorCount: string;
+  whomToMeet: string;
 }
 
 export interface Entry extends FormData {

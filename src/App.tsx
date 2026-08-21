@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle, UserCircle } from 'lucide-react';
 import { CameraCapture } from './components/CameraCapture';
 import { VoiceInput } from './components/VoiceInput';
+import { SelectInput } from './components/SelectInput';
 import { AdminPanel } from './components/AdminPanel';
 import { FormData, Entry } from './types';
 
 type ViewState = 'home' | 'customer' | 'vendor' | 'success' | 'admin';
+
+const MEET_OPTIONS = [
+  'Deepak Khandelwal',
+  'Bhawna Khandelwal',
+  'Khushboo Modi (Sales Manager)',
+  'Nidhi Sharma (General & purchase Manger)',
+  'Anshuman Singh'
+];
 
 const INITIAL_FORM_DATA: FormData = {
   photo: '',
@@ -14,6 +23,7 @@ const INITIAL_FORM_DATA: FormData = {
   email: '',
   address: '',
   visitorCount: '',
+  whomToMeet: '',
 };
 
 export default function App() {
@@ -60,8 +70,8 @@ export default function App() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.mobile || !formData.photo) {
-      alert('Please fill in Name, Mobile Number, and Capture Photo.');
+    if (!formData.name || !formData.mobile || !formData.photo || !formData.whomToMeet) {
+      alert('Please fill in Name, Mobile Number, Whom to Meet, and Capture Photo.');
       return;
     }
     
@@ -239,6 +249,15 @@ export default function App() {
                     placeholder="e.g. 123 Main St"
                     value={formData.address}
                     onChangeText={(text) => updateField('address', text)}
+                  />
+                  
+                  <SelectInput
+                    label="Whom to Meet"
+                    value={formData.whomToMeet}
+                    onChangeSelect={(value) => updateField('whomToMeet', value)}
+                    options={MEET_OPTIONS}
+                    icon={<UserCircle className="w-5 h-5" />}
+                    required
                   />
                   
                   <VoiceInput

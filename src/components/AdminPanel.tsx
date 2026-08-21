@@ -110,6 +110,7 @@ export function AdminPanel({ entries, onBack, onApprove, onReject }: AdminPanelP
                 <tr className="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
                   <th className="p-4 font-semibold">Photo</th>
                   <th className="p-4 font-semibold">Visitor</th>
+                  <th className="p-4 font-semibold">Host / Meet With</th>
                   <th className="p-4 font-semibold">Type</th>
                   <th className="p-4 font-semibold">Time</th>
                   <th className="p-4 font-semibold">Status</th>
@@ -131,6 +132,9 @@ export function AdminPanel({ entries, onBack, onApprove, onReject }: AdminPanelP
                     <td className="p-4">
                       <p className="font-bold text-slate-900">{entry.name}</p>
                       <p className="text-sm text-slate-500">{entry.mobile} {entry.visitorCount ? `• ${entry.visitorCount} person(s)` : ''}</p>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-sm font-medium text-slate-700">{entry.whomToMeet || 'N/A'}</span>
                     </td>
                     <td className="p-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
@@ -171,7 +175,7 @@ export function AdminPanel({ entries, onBack, onApprove, onReject }: AdminPanelP
                 ))}
                 {filteredEntries.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-slate-500">
+                    <td colSpan={7} className="p-8 text-center text-slate-500">
                       No logs found.
                     </td>
                   </tr>
