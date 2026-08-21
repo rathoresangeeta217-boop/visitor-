@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle, UserCircle } from 'lucide-react';
 import { CameraCapture } from './components/CameraCapture';
 import { VoiceInput } from './components/VoiceInput';
 import { SelectInput } from './components/SelectInput';
-import { AdminPanel } from './components/AdminPanel';
 import { FormData, Entry } from './types';
+import { db } from './lib/firebase';
+import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc } from 'firebase/firestore';
+
+// Lazy load admin panel for performance optimization
+const AdminPanel = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
 type ViewState = 'home' | 'customer' | 'vendor' | 'success' | 'admin';
 
@@ -29,25 +33,33 @@ const INITIAL_FORM_DATA: FormData = {
 export default function App() {
   const [view, setView] = useState<ViewState>('home');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
-  const [entries, setEntries] = useState<Entry[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('gate_entries');
-        if (saved) return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse entries from localStorage', e);
-      }
-    }
-    return [];
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('gate_entries', JSON.stringify(entries));
-    }
-  }, [entries]);
-
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [activeNotification, setActiveNotification] = useState<Entry | null>(null);
+
+  // Firestore real-time sync
+  useEffect(() => {
+    const q = query(collection(db, 'entries'), orderBy('timestamp', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedEntries: Entry[] = [];
+      snapshot.forEach((doc) => {
+        fetchedEntries.push({ id: doc.id, ...doc.data() } as Entry);
+      });
+      
+      // Look for new pending entries to show notification (if we are admin or on home)
+      // This is a simple implementation: show notification for the newest pending entry
+      const newestPending = fetchedEntries.find(e => e.status === 'pending');
+      if (newestPending) {
+        // Compare with current activeNotification to prevent re-triggering for the same entry constantly
+        setActiveNotification(prev => prev?.id === newestPending.id ? prev : newestPending);
+      } else {
+        setActiveNotification(null);
+      }
+      
+      setEntries(fetchedEntries);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Auto-approve after 60 seconds
   useEffect(() => {
@@ -68,48 +80,59 @@ export default function App() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.mobile || !formData.photo || !formData.whomToMeet) {
       alert('Please fill in Name, Mobile Number, Whom to Meet, and Capture Photo.');
       return;
     }
     
-    const newEntry: Entry = {
+    const newEntry = {
       ...formData,
-      id: Math.random().toString(36).substr(2, 9),
       type: view as 'customer' | 'vendor',
       timestamp: Date.now(),
       status: 'pending'
     };
 
-    setEntries(prev => [...prev, newEntry]);
-    setActiveNotification(newEntry);
-    
-    // Send system notification if supported and permitted
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(`New ${newEntry.type} Entry`, {
-        body: `${newEntry.name} (${newEntry.mobile}) is waiting for approval.`,
-        icon: newEntry.photo || undefined,
-      });
+    try {
+      await addDoc(collection(db, 'entries'), newEntry);
+      
+      // Send system notification if supported and permitted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`New ${newEntry.type} Entry`, {
+          body: `${newEntry.name} (${newEntry.mobile}) is waiting for approval.`,
+          icon: newEntry.photo || undefined,
+        });
+      }
+      
+      setView('success');
+      
+      // Auto return to home after 3 seconds
+      setTimeout(() => {
+        setView('home');
+      }, 3000);
+    } catch (err) {
+      console.error('Error adding document: ', err);
+      alert('Failed to submit entry. Please try again.');
     }
-    
-    setView('success');
-    
-    // Auto return to home after 3 seconds
-    setTimeout(() => {
-      setView('home');
-    }, 3000);
   };
 
-  const handleApprove = (id: string) => {
-    setEntries(prev => prev.map(e => e.id === id ? { ...e, status: 'approved' } : e));
-    if (activeNotification?.id === id) setActiveNotification(null);
+  const handleApprove = async (id: string) => {
+    try {
+      await updateDoc(doc(db, 'entries', id), { status: 'approved' });
+      if (activeNotification?.id === id) setActiveNotification(null);
+    } catch (err) {
+      console.error('Error approving entry: ', err);
+    }
   };
 
-  const handleReject = (id: string) => {
-    setEntries(prev => prev.map(e => e.id === id ? { ...e, status: 'rejected' } : e));
-    if (activeNotification?.id === id) setActiveNotification(null);
+  const handleReject = async (id: string) => {
+    try {
+      await updateDoc(doc(db, 'entries', id), { status: 'rejected' });
+      if (activeNotification?.id === id) setActiveNotification(null);
+    } catch (err) {
+      console.error('Error rejecting entry: ', err);
+    }
   };
 
   const handleAdminAccess = () => {
@@ -120,7 +143,11 @@ export default function App() {
   };
 
   if (view === 'admin') {
-    return <AdminPanel entries={entries} onBack={() => setView('home')} onApprove={handleApprove} onReject={handleReject} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 font-medium text-slate-500">Loading Admin Dashboard...</div>}>
+        <AdminPanel entries={entries} onBack={() => setView('home')} onApprove={handleApprove} onReject={handleReject} />
+      </Suspense>
+    );
   }
 
   return (

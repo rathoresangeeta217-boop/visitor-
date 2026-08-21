@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /entries/{entryId} {
+      // In a real production app, we would restrict access to authenticated admins and kiosk devices.
+      // For this prototype, we allow open access to enable multi-device sync seamlessly.
+      allow read, write: if true;
+    }
+  }
+}

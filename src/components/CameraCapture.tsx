@@ -49,11 +49,16 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
     if (video && canvas) {
       const context = canvas.getContext('2d');
       if (context) {
-        // Set canvas dimensions to match video stream
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        // Optimize image size to prevent local storage quota limits
+        const MAX_WIDTH = 640;
+        const scale = Math.min(MAX_WIDTH / video.videoWidth, 1);
+        
+        canvas.width = video.videoWidth * scale;
+        canvas.height = video.videoHeight * scale;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const data = canvas.toDataURL('image/jpeg');
+        
+        // Compress to JPEG with 60% quality
+        const data = canvas.toDataURL('image/jpeg', 0.6);
         setPhotoSrc(data);
         setHasPhoto(true);
         onCapture(data);
