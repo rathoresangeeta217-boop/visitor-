@@ -91,15 +91,15 @@ export default function App() {
     return () => unsubscribe();
   }, [loggedInUser]);
 
-  // Auto-approve after 60 seconds
+  // Auto-approve after 60 seconds (Runs on the kiosk side that submitted it)
   useEffect(() => {
-    if (activeNotification) {
+    if (submittedEntryId) {
       const timer = setTimeout(() => {
-        handleApprove(activeNotification.id);
+        handleApprove(submittedEntryId);
       }, 60000);
       return () => clearTimeout(timer);
     }
-  }, [activeNotification]);
+  }, [submittedEntryId]);
 
   // Watch for status changes of the submitted entry
   useEffect(() => {
@@ -250,32 +250,17 @@ export default function App() {
       {view === 'waiting' && (
         <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
           <div className="bg-white p-12 rounded-3xl shadow-xl flex flex-col items-center max-w-lg w-full text-center border border-slate-100">
-            <div className="relative mb-8">
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 1, 0.5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="absolute inset-0 bg-blue-100 rounded-full blur-xl"
-              />
-              <div className="relative w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
-                <motion.div
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <ScanFace className="w-12 h-12" />
-                </motion.div>
-                <motion.div
-                  className="absolute inset-0 border-t-4 border-blue-500 rounded-full"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                />
-              </div>
+            <div className="relative mb-8 w-full max-w-[240px] rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-slate-100">
+              <video 
+                src="/waiting.mp4" 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                className="w-full h-auto object-cover"
+              >
+                Your browser does not support the video tag.
+              </video>
             </div>
             
             <h2 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Waiting for Approval</h2>
