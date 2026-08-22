@@ -283,7 +283,7 @@ export default function App() {
       {/* Global Notification Overlay */}
       {view === 'admin' && activeNotification && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-[400px] flex flex-col gap-3">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-[calc(100vw-2rem)] sm:w-[400px] flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => activeNotification.photo && setShowNotificationPhoto(true)}
@@ -440,19 +440,19 @@ export default function App() {
       )}
 
       {(view === 'customer' || view === 'vendor') && (
-        <div className="min-h-screen flex flex-col items-center py-10 px-4 sm:px-6 lg:px-8">
-          <div className="w-full max-w-4xl flex items-center justify-between mb-8">
+        <div className="min-h-screen flex flex-col items-center py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
             <button
               onClick={() => setView('home')}
-              className="flex items-center gap-2 px-4 py-3 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-semibold shadow-sm transition-colors border border-slate-200"
+              className="flex items-center gap-2 px-4 py-3 bg-white hover:bg-slate-100 text-slate-700 rounded-xl font-semibold shadow-sm transition-colors border border-slate-200 self-start sm:self-auto"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Back to Home</span>
+              <span>Back</span>
             </button>
-            <h1 className="text-3xl font-bold text-slate-900 capitalize">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 capitalize text-center">
               {view} Registration
             </h1>
-            <div className="w-[140px]" /> {/* Spacer for centering */}
+            <div className="hidden sm:block w-[100px]" /> {/* Spacer for centering on desktop */}
           </div>
 
           <form onSubmit={handleSubmit} className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -572,30 +572,27 @@ export default function App() {
           </div>
 
           <div className="max-w-3xl w-full">
-            <div className="text-center mb-16">
-              <h1 className="text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Gate Entry System</h1>
-              <p className="text-xl text-slate-500 font-medium">Please select your visitor type to begin registration.</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <div className="text-center mb-10 sm:mb-16 mt-16 sm:mt-0">
+              <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Gate Entry System</h1>
+              <p className="text-lg sm:text-xl text-slate-500 font-medium px-4">Please select your visitor type to begin registration.</p>
+            </div>            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
               <button
                 onClick={() => handleSelectType('customer')}
-                className="group flex flex-col items-center justify-center gap-6 p-12 bg-white hover:bg-blue-50 border-2 border-transparent hover:border-blue-200 rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-300"
+                className="group flex flex-col items-center justify-center gap-4 sm:gap-6 p-8 sm:p-12 bg-white hover:bg-blue-50 border-2 border-transparent hover:border-blue-200 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-300"
               >
-                <div className="w-32 h-32 bg-blue-100 group-hover:bg-blue-600 text-blue-600 group-hover:text-white rounded-[2rem] flex items-center justify-center transition-colors duration-300">
-                  <Users className="w-16 h-16" />
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-blue-100 group-hover:bg-blue-600 text-blue-600 group-hover:text-white rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center transition-colors duration-300">
+                  <Users className="w-12 h-12 sm:w-16 sm:h-16" />
                 </div>
-                <h2 className="text-3xl font-bold text-slate-800 group-hover:text-blue-900">Customer</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 group-hover:text-blue-900">Customer</h2>
               </button>
-
               <button
                 onClick={() => handleSelectType('vendor')}
-                className="group flex flex-col items-center justify-center gap-6 p-12 bg-white hover:bg-amber-50 border-2 border-transparent hover:border-amber-200 rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:shadow-amber-900/5 transition-all duration-300"
+                className="group flex flex-col items-center justify-center gap-4 sm:gap-6 p-8 sm:p-12 bg-white hover:bg-amber-50 border-2 border-transparent hover:border-amber-200 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:shadow-amber-900/5 transition-all duration-300"
               >
-                <div className="w-32 h-32 bg-amber-100 group-hover:bg-amber-500 text-amber-600 group-hover:text-white rounded-[2rem] flex items-center justify-center transition-colors duration-300">
-                  <Truck className="w-16 h-16" />
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-amber-100 group-hover:bg-amber-500 text-amber-600 group-hover:text-white rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center transition-colors duration-300">
+                  <Truck className="w-12 h-12 sm:w-16 sm:h-16" />
                 </div>
-                <h2 className="text-3xl font-bold text-slate-800 group-hover:text-amber-900">Vendor</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 group-hover:text-amber-900">Vendor</h2>
               </button>
             </div>
           </div>
