@@ -282,8 +282,8 @@ export default function App() {
 
       {/* Global Notification Overlay */}
       {view === 'admin' && activeNotification && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-[calc(100vw-2rem)] sm:w-[400px] flex flex-col gap-3">
+        <div className="fixed top-[calc(1rem_+_env(safe-area-inset-top))] sm:top-6 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-auto sm:w-[400px] flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => activeNotification.photo && setShowNotificationPhoto(true)}
