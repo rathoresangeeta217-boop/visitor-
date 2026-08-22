@@ -551,7 +551,7 @@ export default function App() {
 
       {view === 'home' && (
         <div className="min-h-screen flex flex-col items-center justify-center p-6">
-          <div className="absolute top-6 right-6 flex items-center gap-3">
+          <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 z-10">
             {deferredPrompt && (
               <button
                 onClick={handleInstallClick}

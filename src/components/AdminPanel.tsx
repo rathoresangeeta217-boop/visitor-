@@ -47,7 +47,7 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
   const pendingEntries = authorizedEntries.filter((e) => e.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-10">
+    <div className="min-h-screen bg-slate-50 p-3 sm:p-6 md:p-10">
       
       {/* Fullscreen Image Overlay */}
       {fullscreenImage && (
@@ -133,7 +133,7 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl w-full mx-auto space-y-8">
 
         
         {/* Header */}
@@ -200,8 +200,8 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
         </div>
 
         {/* Filters & Table */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-4 whitespace-nowrap sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full">
+          <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-slate-800">Visitor Logs</h2>
             <div className="flex w-full sm:w-auto gap-2 bg-slate-100 p-1 rounded-lg">
               {(['all', 'customer', 'vendor'] as const).map((type) => (
@@ -269,7 +269,7 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
                         </a>
                       </div>
                       {entry.remarks && (
-                        <p className="mt-2 text-xs text-slate-600 bg-slate-100 p-2 rounded-lg border border-slate-200">
+                        <p className="mt-2 text-xs text-slate-600 bg-slate-100 p-2 rounded-lg border border-slate-200 whitespace-normal min-w-[200px]">
                           <span className="font-semibold block mb-1">Remarks:</span>
                           {entry.remarks}
                         </p>
