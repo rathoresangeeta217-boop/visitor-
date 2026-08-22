@@ -8,6 +8,7 @@ interface CameraCaptureProps {
 export function CameraCapture({ onCapture }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [hasPhoto, setHasPhoto] = useState(false);
   const [photoSrc, setPhotoSrc] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -19,11 +20,12 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
       setError('Camera API not supported in this browser.');
       return;
     }
-    
+
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: 'user' } })
       .then((stream) => {
         setStream(stream);
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -37,8 +39,8 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
   useEffect(() => {
     startVideo();
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
   }, [startVideo]);
@@ -100,7 +102,6 @@ export function CameraCapture({ onCapture }: CameraCaptureProps) {
         )}
         <canvas ref={canvasRef} className="hidden" />
       </div>
-
       <div className="p-4 w-full flex justify-center bg-white border-t border-slate-200">
         {!hasPhoto ? (
           <button

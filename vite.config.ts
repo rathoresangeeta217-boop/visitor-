@@ -13,7 +13,7 @@ export default defineConfig(() => {
     },
     build: {
       target: 'esnext',
-      minify: 'esbuild',
+      minify: 'esbuild' as const,
       rollupOptions: {
         output: {
           manualChunks: {

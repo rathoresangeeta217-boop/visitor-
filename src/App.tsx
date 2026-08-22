@@ -107,9 +107,10 @@ export default function App() {
         fetchedEntries.push({ id: doc.id, ...doc.data() } as Entry);
       });
       
-      // Look for new pending entries to show notification
-      const newestPending = fetchedEntries.find(e => e.status === 'pending');
-      if (newestPending && isAuthorized(loggedInUser, newestPending.whomToMeet)) {
+      // Look for new pending entries authorized for the current admin to show notification
+      const newestPending = fetchedEntries.find(e => e.status === 'pending' && isAuthorized(loggedInUser, e.whomToMeet));
+      
+      if (newestPending) {
         // Compare with current activeNotification to prevent re-triggering for the same entry constantly
         setActiveNotification(prev => {
           if (prev?.id !== newestPending.id) {
@@ -217,7 +218,6 @@ export default function App() {
   const handleApprove = async (id: string) => {
     try {
       await updateDoc(doc(db, 'entries', id), { status: 'approved' });
-      if (activeNotification?.id === id) setActiveNotification(null);
     } catch (err) {
       console.error('Error approving entry: ', err);
     }
@@ -226,7 +226,6 @@ export default function App() {
   const handleReject = async (id: string) => {
     try {
       await updateDoc(doc(db, 'entries', id), { status: 'rejected' });
-      if (activeNotification?.id === id) setActiveNotification(null);
     } catch (err) {
       console.error('Error rejecting entry: ', err);
     }
@@ -375,17 +374,8 @@ export default function App() {
       {view === 'waiting' && (
         <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
           <div className="bg-white p-12 rounded-3xl shadow-xl flex flex-col items-center max-w-lg w-full text-center border border-slate-100">
-            <div className="relative mb-8 w-full max-w-[240px] rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-slate-100">
-              <video 
-                src="/waiting.mp4" 
-                autoPlay 
-                loop 
-                muted 
-                playsInline 
-                className="w-full h-auto object-cover"
-              >
-                Your browser does not support the video tag.
-              </video>
+            <div className="relative mb-8 w-32 h-32 flex items-center justify-center rounded-full bg-slate-50 text-slate-400">
+              <Clock className="w-16 h-16 animate-spin text-slate-300" />
             </div>
             
             <h2 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Waiting for Approval</h2>
@@ -394,8 +384,8 @@ export default function App() {
             </p>
             
             <div className="mt-8 flex items-center gap-2 text-sm text-slate-400 font-semibold uppercase tracking-wider">
-              <Clock className="w-4 h-4 animate-pulse" />
-              <span>Usually takes about a minute</span>
+              <Clock className="w-4 h-4 animate-pulse text-blue-500" />
+              <span className="text-blue-500">Usually takes about a minute</span>
             </div>
           </div>
         </div>
