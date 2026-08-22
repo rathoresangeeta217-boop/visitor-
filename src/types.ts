@@ -15,4 +15,5 @@ export interface Entry extends FormData {
   type: 'customer' | 'vendor';
   timestamp: number;
   status: EntryStatus;
+  remarks?: string;
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle, UserCircle, LogOut, Clock, ScanFace, UserCheck, UserX } from 'lucide-react';
+import { Users, Truck, ArrowLeft, Send, Camera, ShieldCheck, CheckCircle, XCircle, UserCircle, LogOut, Clock, ScanFace, UserCheck, UserX, Download, Phone, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
 import { CameraCapture } from './components/CameraCapture';
 import { VoiceInput } from './components/VoiceInput';
@@ -33,6 +33,32 @@ const INITIAL_FORM_DATA: FormData = {
   whomToMeet: '',
 };
 
+// Helper to play a clean notification chime using Web Audio API
+const playNotificationSound = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const playBeep = (time: number, freq: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+      osc.start(time);
+      osc.stop(time + 0.3);
+    };
+    // Play a friendly double chime
+    playBeep(ctx.currentTime, 880); // A5
+    playBeep(ctx.currentTime + 0.15, 1108.73); // C#6
+  } catch (err) {
+    console.error('Audio error:', err);
+  }
+};
+
 const isAuthorized = (user: string | null, whomToMeet: string) => {
   if (!user) return false;
   if (user === 'Bhawna Khandelwal' || user === 'Anshuman') return true;
@@ -48,9 +74,29 @@ export default function App() {
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [activeNotification, setActiveNotification] = useState<Entry | null>(null);
-  const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+  const [loggedInUser, setLoggedInUser] = useState<string | null>(() => localStorage.getItem('adminUser'));
   const [submittedEntryId, setSubmittedEntryId] = useState<string | null>(null);
   const [showNotificationPhoto, setShowNotificationPhoto] = useState<boolean>(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  // Listen for PWA install prompt
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   // Firestore real-time sync
   useEffect(() => {
@@ -78,6 +124,13 @@ export default function App() {
                 notif.close();
               };
             }
+            
+            // Play sound and vibrate for the alert
+            playNotificationSound();
+            if ('vibrate' in navigator) {
+              navigator.vibrate([200, 100, 200]);
+            }
+            
             return newestPending;
           }
           return prev;
@@ -179,14 +232,27 @@ export default function App() {
     }
   };
 
+  const handleUpdateRemarks = async (id: string, remarks: string) => {
+    try {
+      await updateDoc(doc(db, 'entries', id), { remarks });
+    } catch (err) {
+      console.error('Error updating remarks: ', err);
+    }
+  };
+
   const handleAdminAccess = () => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
-    setView('admin_login');
+    if (loggedInUser) {
+      setView('admin');
+    } else {
+      setView('admin_login');
+    }
   };
 
   const handleLoginSuccess = (user: string) => {
+    localStorage.setItem('adminUser', user);
     setLoggedInUser(user);
     setView('admin');
   };
@@ -203,11 +269,13 @@ export default function App() {
             entries={entries} 
             loggedInUser={loggedInUser}
             onBack={() => {
+              localStorage.removeItem('adminUser');
               setLoggedInUser(null);
               setView('home');
             }} 
             onApprove={handleApprove} 
             onReject={handleReject} 
+            onUpdateRemarks={handleUpdateRemarks}
           />
         </Suspense>
       )}
@@ -230,16 +298,34 @@ export default function App() {
               </button>
               <div className="flex-1">
                 <p className="text-sm font-bold text-slate-900">New {activeNotification.type} Entry</p>
-                <p className="text-xs text-slate-500">{activeNotification.name} ({activeNotification.mobile})</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-slate-500">{activeNotification.name} ({activeNotification.mobile})</p>
+                  <a 
+                    href={`tel:${activeNotification.mobile}`}
+                    className="inline-flex items-center justify-center p-1 bg-green-100 text-green-700 hover:bg-green-200 rounded-full transition-colors"
+                    title="Call Customer"
+                  >
+                    <Phone className="w-3 h-3" />
+                  </a>
+                  <a 
+                    href={`sms:${activeNotification.mobile}`}
+                    className="inline-flex items-center justify-center p-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-full transition-colors"
+                    title="Message Customer"
+                  >
+                    <MessageSquare className="w-3 h-3" />
+                  </a>
+                </div>
               </div>
-              {activeNotification.photo && (
-                <button 
-                  onClick={() => setShowNotificationPhoto(true)}
-                  className="text-xs text-blue-600 font-semibold bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors"
-                >
-                  View Photo
-                </button>
-              )}
+              <div className="flex flex-col gap-2 items-end">
+                {activeNotification.photo && (
+                  <button 
+                    onClick={() => setShowNotificationPhoto(true)}
+                    className="text-xs text-blue-600 font-semibold bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors"
+                  >
+                    View Photo
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               <button
@@ -465,14 +551,25 @@ export default function App() {
 
       {view === 'home' && (
         <div className="min-h-screen flex flex-col items-center justify-center p-6">
-          {/* Admin Access Button */}
-          <button
-            onClick={handleAdminAccess}
-            className="absolute top-6 right-6 flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-600 rounded-lg shadow-sm border border-slate-200 font-medium transition-colors"
-          >
-            <ShieldCheck className="w-5 h-5" />
-            <span>Admin Panel</span>
-          </button>
+          <div className="absolute top-6 right-6 flex items-center gap-3">
+            {deferredPrompt && (
+              <button
+                onClick={handleInstallClick}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm font-medium transition-colors"
+              >
+                <Download className="w-5 h-5" />
+                <span>Install App</span>
+              </button>
+            )}
+            {/* Admin Access Button */}
+            <button
+              onClick={handleAdminAccess}
+              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-600 rounded-lg shadow-sm border border-slate-200 font-medium transition-colors"
+            >
+              <ShieldCheck className="w-5 h-5" />
+              <span>Admin Panel</span>
+            </button>
+          </div>
 
           <div className="max-w-3xl w-full">
             <div className="text-center mb-16">
