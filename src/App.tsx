@@ -282,9 +282,10 @@ export default function App() {
             <motion.div 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6"
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="w-32 h-32 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-emerald-100/50"
             >
-              <UserCheck className="w-12 h-12" />
+              <CheckCircle className="w-16 h-16" />
             </motion.div>
             <h2 className="text-3xl font-bold text-slate-900 mb-2">Entry Approved!</h2>
             <p className="text-lg text-slate-500">
@@ -300,9 +301,10 @@ export default function App() {
             <motion.div 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6"
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="w-32 h-32 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-red-100/50"
             >
-              <UserX className="w-12 h-12" />
+              <XCircle className="w-16 h-16" />
             </motion.div>
             <h2 className="text-3xl font-bold text-slate-900 mb-2">Entry Declined</h2>
             <p className="text-lg text-slate-500">
