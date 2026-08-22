@@ -50,6 +50,7 @@ export default function App() {
   const [activeNotification, setActiveNotification] = useState<Entry | null>(null);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
   const [submittedEntryId, setSubmittedEntryId] = useState<string | null>(null);
+  const [showNotificationPhoto, setShowNotificationPhoto] = useState<boolean>(false);
 
   // Firestore real-time sync
   useEffect(() => {
@@ -216,17 +217,29 @@ export default function App() {
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 w-[400px] flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+              <button 
+                onClick={() => activeNotification.photo && setShowNotificationPhoto(true)}
+                className={`w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0 ${activeNotification.photo ? 'cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all' : ''}`}
+                title={activeNotification.photo ? "View full photo" : ""}
+              >
                 {activeNotification.photo ? (
                   <img src={activeNotification.photo} alt="visitor" className="w-full h-full object-cover rounded-full" />
                 ) : (
                   <Users className="w-6 h-6 text-blue-600" />
                 )}
-              </div>
-              <div>
+              </button>
+              <div className="flex-1">
                 <p className="text-sm font-bold text-slate-900">New {activeNotification.type} Entry</p>
                 <p className="text-xs text-slate-500">{activeNotification.name} ({activeNotification.mobile})</p>
               </div>
+              {activeNotification.photo && (
+                <button 
+                  onClick={() => setShowNotificationPhoto(true)}
+                  className="text-xs text-blue-600 font-semibold bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded-md transition-colors"
+                >
+                  View Photo
+                </button>
+              )}
             </div>
             <div className="flex gap-2">
               <button
@@ -243,6 +256,32 @@ export default function App() {
               </button>
             </div>
             <p className="text-[10px] text-slate-400 text-center uppercase tracking-wider">Auto-approves in 60s</p>
+          </div>
+        </div>
+      )}
+
+      {/* Full Size Photo Modal */}
+      {showNotificationPhoto && activeNotification?.photo && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200" 
+          onClick={() => setShowNotificationPhoto(false)}
+        >
+          <div className="relative bg-white rounded-2xl p-2 max-w-sm w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setShowNotificationPhoto(false)}
+              className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm text-slate-800 hover:text-red-600 hover:bg-white p-2 rounded-full shadow-sm transition-all z-10"
+            >
+              <XCircle className="w-6 h-6" />
+            </button>
+            <img 
+              src={activeNotification.photo} 
+              alt="Visitor Full Photo" 
+              className="w-full h-auto max-h-[60vh] rounded-xl object-cover" 
+            />
+            <div className="p-4 text-center pb-2">
+              <h3 className="font-bold text-lg text-slate-900">{activeNotification.name}</h3>
+              <p className="text-sm text-slate-500 capitalize">{activeNotification.type} • {activeNotification.mobile}</p>
+            </div>
           </div>
         </div>
       )}
