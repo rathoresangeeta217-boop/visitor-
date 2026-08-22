@@ -137,7 +137,7 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
 
         
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
@@ -147,7 +147,7 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
               <ArrowLeft className="w-6 h-6" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Admin Dashboard</h1>
               {loggedInUser && (
                 <p className="text-slate-500 font-medium flex items-center gap-2 mt-1">
                   <User className="w-4 h-4" /> Welcome, {loggedInUser}
@@ -156,59 +156,59 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
             </div>
           </div>
           
-          <div className="flex gap-4">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50">
               <Download className="w-4 h-4" />
-              Weekly Report
+              Weekly
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50">
+            <button className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-50">
               <Download className="w-4 h-4" />
-              Monthly Report
+              Monthly
             </button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-              <FileText className="w-6 h-6" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <p className="text-slate-500 font-medium">Total Entries</p>
-              <p className="text-2xl font-bold text-slate-900">{totalEntries}</p>
+              <p className="text-sm sm:text-base text-slate-500 font-medium">Total Entries</p>
+              <p className="text-xl sm:text-2xl font-bold text-slate-900">{totalEntries}</p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-6 h-6" />
+          <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0">
+              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <p className="text-slate-500 font-medium">Approved</p>
-              <p className="text-2xl font-bold text-slate-900">{approvedEntries}</p>
+              <p className="text-sm sm:text-base text-slate-500 font-medium">Approved</p>
+              <p className="text-xl sm:text-2xl font-bold text-slate-900">{approvedEntries}</p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
-              <Clock className="w-6 h-6" />
+          <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <p className="text-slate-500 font-medium">Pending</p>
-              <p className="text-2xl font-bold text-slate-900">{pendingEntries}</p>
+              <p className="text-sm sm:text-base text-slate-500 font-medium">Pending</p>
+              <p className="text-xl sm:text-2xl font-bold text-slate-900">{pendingEntries}</p>
             </div>
           </div>
         </div>
 
         {/* Filters & Table */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div className="p-4 whitespace-nowrap sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-slate-800">Visitor Logs</h2>
-            <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
+            <div className="flex w-full sm:w-auto gap-2 bg-slate-100 p-1 rounded-lg">
               {(['all', 'customer', 'vendor'] as const).map((type) => (
                 <button
                   key={type}
                   onClick={() => setFilter(type)}
-                  className={`px-4 py-2 rounded-md font-medium text-sm capitalize transition-colors ${
+                  className={`flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-sm capitalize transition-colors ${
                     filter === type ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
@@ -222,19 +222,19 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider">
-                  <th className="p-4 font-semibold">Photo</th>
-                  <th className="p-4 font-semibold">Visitor</th>
-                  <th className="p-4 font-semibold">Host / Meet With</th>
-                  <th className="p-4 font-semibold">Type</th>
-                  <th className="p-4 font-semibold">Time</th>
-                  <th className="p-4 font-semibold">Status</th>
-                  <th className="p-4 font-semibold text-right">Actions</th>
+                  <th className="p-4 whitespace-nowrap font-semibold">Photo</th>
+                  <th className="p-4 whitespace-nowrap font-semibold">Visitor</th>
+                  <th className="p-4 whitespace-nowrap font-semibold">Host / Meet With</th>
+                  <th className="p-4 whitespace-nowrap font-semibold">Type</th>
+                  <th className="p-4 whitespace-nowrap font-semibold">Time</th>
+                  <th className="p-4 whitespace-nowrap font-semibold">Status</th>
+                  <th className="p-4 whitespace-nowrap font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredEntries.map((entry) => (
                   <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       {entry.photo ? (
                         <img 
                           src={entry.photo} 
@@ -249,7 +249,7 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
                         </div>
                       )}
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       <p className="font-bold text-slate-900">{entry.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <p className="text-sm text-slate-500">{entry.mobile} {entry.visitorCount ? `• ${entry.visitorCount} person(s)` : ''}</p>
@@ -275,25 +275,25 @@ export function AdminPanel({ entries, loggedInUser, onBack, onApprove, onReject,
                         </p>
                       )}
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       <span className="text-sm font-medium text-slate-700">{entry.whomToMeet || 'N/A'}</span>
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
                         entry.type === 'customer' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
                       }`}>
                         {entry.type}
                       </span>
                     </td>
-                    <td className="p-4 text-sm text-slate-600">
+                    <td className="p-4 whitespace-nowrap text-sm text-slate-600">
                       {new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
-                    <td className="p-4">
+                    <td className="p-4 whitespace-nowrap">
                       {entry.status === 'pending' && <span className="text-amber-600 bg-amber-50 px-3 py-1 rounded-full text-xs font-semibold">Pending</span>}
                       {entry.status === 'approved' && <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-xs font-semibold">Approved</span>}
                       {entry.status === 'rejected' && <span className="text-red-600 bg-red-50 px-3 py-1 rounded-full text-xs font-semibold">Rejected</span>}
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 whitespace-nowrap text-right">
                       {entry.status === 'pending' && (
                         <div className="flex items-center justify-end gap-2">
                           <button
